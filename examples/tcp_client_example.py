@@ -17,6 +17,7 @@ the client can be defined by the user.
 from umodbus.tcp import ModbusTCP
 
 # import relevant auxiliary script variables
+print("attempting to load common files")
 from examples.common.register_definitions import register_definitions, setup_callbacks
 from examples.common.tcp_client_common import local_ip, tcp_port
 from examples.common.tcp_client_common import IS_DOCKER_MICROPYTHON
