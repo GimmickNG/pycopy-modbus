@@ -6,53 +6,53 @@ Main script
 
 Do your stuff here, this file is similar to the loop() function on Arduino
 
-Create an async Modbus TCP client (slave) which can be requested for data or
-set with specific values by a host device.
+Create an async Modbus TCP client (master) which requests or sets data on a
+client device.
 
 The TCP port and IP address can be choosen freely. The register definitions of
 the client can be defined by the user.
 """
 
-# system imports
+# system packages
 try:
     import uasyncio as asyncio
 except ImportError:
     import asyncio
 
-from umodbus.asynchronous.tcp import AsyncModbusTCP as ModbusTCP
-from examples.common.register_definitions import register_definitions, setup_callbacks
-from examples.common.tcp_client_common import IS_DOCKER_MICROPYTHON
-from examples.common.tcp_client_common import local_ip, tcp_port
+# import modbus client classes
+from umodbus.asynchronous.tcp import AsyncTCP as ModbusTCPMaster
+from examples.common.register_definitions import register_definitions
+from examples.common.tcp_client_common import slave_ip, slave_tcp_port
+from examples.common.tcp_client_common import slave_addr, exit
+from examples.common.async_client_tests import run_client_tests
 
 
-async def start_tcp_server(host, port, backlog, register_definitions):
-    client = ModbusTCP()  # TODO: rename to `server`
-    await client.bind(local_ip=host, local_port=port, max_connections=backlog)
+async def start_tcp_client(client, port, unit_id, timeout):
+    # TCP Master setup
+    # act as client, get Modbus data via TCP from a client device
+    # ModbusTCPMaster can make TCP requests to a client device to get/set data
+    client = ModbusTCPMaster(
+        slave_ip=client,
+        slave_port=port,
+        timeout=timeout)
 
-    print('Setting up registers ...')
-    # setup remaining callbacks after creating client
-    setup_callbacks(client, register_definitions)
-    # use the defined values of each register type provided by register_definitions
-    client.setup_registers(registers=register_definitions)
-    # alternatively use dummy default values (True for bool regs, 999 otherwise)
-    # client.setup_registers(registers=register_definitions, use_default_vals=True)
-    print('Register setup done')
+    # unlike synchronous client, need to call connect() here
+    await client.connect()
+    if client.is_connected:
+        print('Requesting and updating data on TCP client at {}:{}'.
+              format(client, port))
+        print()
 
-    print('Serving as TCP client on {}:{}'.format(local_ip, tcp_port))
-    await client.serve_forever()
+        await run_client_tests(client=client,
+                               slave_addr=unit_id,
+                               register_definitions=register_definitions)
 
-
-# alternatively the register definitions can also be loaded from a JSON file
-# this is always done if Docker is used for testing purpose in order to keep
-# the client registers in sync with the test registers
-if IS_DOCKER_MICROPYTHON:
-    import json
-    with open('registers/example.json', 'r') as file:
-        register_definitions = json.load(file)  # noqa: F811
 
 # create and run task
-task = start_tcp_server(host=local_ip,
-                        port=tcp_port,
-                        backlog=10,         # arbitrary backlog
-                        register_definitions=register_definitions)
+task = start_tcp_client(client=slave_ip,
+                        port=slave_tcp_port,
+                        unit_id=slave_addr,
+                        timeout=5)
 asyncio.run(task)
+
+exit()

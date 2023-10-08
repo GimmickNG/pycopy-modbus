@@ -10,6 +10,25 @@
 version: "3.8"
 
 services:
+  micropython-server:
+    build:
+      context: .
+      dockerfile: Dockerfile.server_tcp
+    container_name: micropython-server
+    volumes:
+      - ./:/home
+      - ./umodbus:/root/.micropython/lib/umodbus
+    expose:
+      - "502"
+    ports:
+      # reach "micropython-server" at 172.24.0.2:502, see networks
+      - "502:502"
+    networks:
+      my_bridge:
+        # fix IPv4 address to be known and in the MicroPython scripts
+        # https://docs.docker.com/compose/compose-file/#ipv4_address
+        ipv4_address: 172.24.0.2
+
   micropython-client:
     build:
       context: .
@@ -18,27 +37,8 @@ services:
     volumes:
       - ./:/home
       - ./umodbus:/root/.micropython/lib/umodbus
-    expose:
-      - "502"
-    ports:
-      # reach "micropython-client" at 172.24.0.2:502, see networks
-      - "502:502"
-    networks:
-      my_bridge:
-        # fix IPv4 address to be known and in the MicroPython scripts
-        # https://docs.docker.com/compose/compose-file/#ipv4_address
-        ipv4_address: 172.24.0.2
-
-  micropython-host:
-    build:
-      context: .
-      dockerfile: Dockerfile.host_tcp
-    container_name: micropython-host
-    volumes:
-      - ./:/home
-      - ./umodbus:/root/.micropython/lib/umodbus
     depends_on:
-      - micropython-client
+      - micropython-server
     networks:
       my_bridge:
         # fix IPv4 address to be known and in the MicroPython scripts

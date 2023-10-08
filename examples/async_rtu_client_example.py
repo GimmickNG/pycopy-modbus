@@ -6,8 +6,8 @@ Main script
 
 Do your stuff here, this file is similar to the loop() function on Arduino
 
-Create an async Modbus RTU client (slave) which can be requested for data or
-set with specific values by a host device.
+Create an async Modbus RTU client (master) which requests or sets data on a
+server (slave) device.
 
 The RTU communication pins can be choosen freely (check MicroPython device/
 port specific limitations).
@@ -21,58 +21,61 @@ try:
 except ImportError:
     import asyncio
 
-# import modbus client classes
-from umodbus.asynchronous.serial import AsyncModbusRTU as ModbusRTU
-from examples.common.register_definitions import register_definitions, setup_callbacks
+from umodbus.asynchronous.serial import AsyncSerial as ModbusRTUMaster
+from examples.common.register_definitions import register_definitions
 from examples.common.rtu_client_common import IS_DOCKER_MICROPYTHON
-from examples.common.rtu_client_common import slave_addr, rtu_pins
-from examples.common.rtu_client_common import baudrate, uart_id
+from examples.common.rtu_client_common import slave_addr, uart_id, read_timeout
+from examples.common.rtu_client_common import baudrate, rtu_pins, exit
+from examples.common.async_client_tests import run_client_tests
 
 
-async def start_rtu_server(slave_addr,
-                           rtu_pins,
-                           baudrate,
-                           uart_id,
-                           **kwargs):
-    """Creates an RTU client and runs tests"""
+async def start_rtu_client(rtu_pins,
+                           baudrate=9600,
+                           data_bits=8,
+                           stop_bits=1,
+                           parity=None,
+                           ctrl_pin=12,
+                           uart_id=1,
+                           read_timeout=120,
+                           **extra_args):
+    """Creates an RTU client (master) and runs tests"""
 
-    client = ModbusRTU(addr=slave_addr,
-                       pins=rtu_pins,
-                       baudrate=baudrate,
-                       uart_id=uart_id,
-                       **kwargs)
+    client = ModbusRTUMaster(
+        pins=rtu_pins,                  # given as tuple (TX, RX)
+        baudrate=baudrate,              # optional, default 9600
+        data_bits=data_bits,            # optional, default 8
+        stop_bits=stop_bits,            # optional, default 1
+        parity=parity,                  # optional, default None
+        ctrl_pin=ctrl_pin,              # optional, control DE/RE
+        uart_id=uart_id,                # optional, default 1, see port specific docs
+        read_timeout=read_timeout,      # optional, default 120
+        **extra_args                    # untested args: timeout_char (default 2)
+    )
+
+    print('Requesting and updating data on RTU client at address {} with {} baud'.
+          format(slave_addr, baudrate))
+    print()
 
     if IS_DOCKER_MICROPYTHON:
         # works only with fake machine UART
-        assert client._itf._uart._is_server is True
+        assert client._uart._is_server is False
 
-    # start continuously listening in background
-    await client.bind()
-
-    # reset all registers back to their default value with a callback
-    setup_callbacks(client, register_definitions)
-
-    print('Setting up registers ...')
-    # use the defined values of each register type provided by register_definitions
-    client.setup_registers(registers=register_definitions)
-    # alternatively use dummy default values (True for bool regs, 999 otherwise)
-    # client.setup_registers(registers=register_definitions, use_default_vals=True)
-    print('Register setup done')
-
-    await client.serve_forever()
-
+    await run_client_tests(client=client,
+                           slave_addr=slave_addr,
+                           register_definitions=register_definitions)
 
 # create and run task
-task = start_rtu_server(slave_addr=slave_addr,
-                        rtu_pins=rtu_pins,      # given as tuple (TX, RX)
-                        baudrate=baudrate,      # optional, default 9600
-                        # data_bits=8,          # optional, default 8
-                        # stop_bits=1,          # optional, default 1
-                        # parity=None,          # optional, default None
-                        # ctrl_pin=12,          # optional, control DE/RE
-                        uart_id=uart_id)        # optional, default 1, see port specific docs
+task = start_rtu_client(
+    rtu_pins=rtu_pins,              # given as tuple (TX, RX)
+    baudrate=baudrate,              # optional, default 9600
+    # data_bits=8,                  # optional, default 8
+    # stop_bits=1,                  # optional, default 1
+    # parity=None,                  # optional, default None
+    # ctrl_pin=12,                  # optional, control DE/RE
+    uart_id=uart_id,                # optional, default 1, see port specific docs
+    read_timeout=read_timeout,      # optional, default 120
+    # timeout_char=2                # untested, default 2 (ms)
+)
 asyncio.run(task)
 
-if IS_DOCKER_MICROPYTHON:
-    import sys
-    sys.exit(0)
+exit()

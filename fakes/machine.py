@@ -47,7 +47,7 @@ class UART(object):
         # Port to listen on (non-privileged ports are > 1023)
         if sys.implementation.name.lower() == 'micropython':
             # on MicroPython connect to the (potentially) running TCP server
-            # see docker-compose-rtu-test.yaml at micropython-client-rtu
+            # see docker-compose-rtu-test.yaml at micropython-server-rtu
             self._host = '172.25.0.2'
         else:
             # on non MicroPython system connect to localhost

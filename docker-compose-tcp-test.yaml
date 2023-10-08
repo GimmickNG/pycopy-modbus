@@ -10,11 +10,11 @@
 version: "3.8"
 
 services:
-  micropython-client:
+  micropython-server:
     build:
       context: .
-      dockerfile: Dockerfile.client_tcp
-    container_name: micropython-client
+      dockerfile: Dockerfile.server_tcp
+    container_name: micropython-server
     volumes:
       - ./:/home
       - ./registers:/home/registers
@@ -23,7 +23,7 @@ services:
     expose:
       - "502"
     ports:
-      # reach "micropython-client" at 172.24.0.2:502, see networks
+      # reach "micropython-server" at 172.24.0.2:502, see networks
       - "502:502"
     networks:
       my_bridge:
@@ -31,18 +31,18 @@ services:
         # https://docs.docker.com/compose/compose-file/#ipv4_address
         ipv4_address: 172.24.0.2
 
-  micropython-host:
+  micropython-client:
     build:
       context: .
       dockerfile: Dockerfile.test_examples
-    container_name: micropython-host
+    container_name: micropython-client
     volumes:
       - ./:/home
       - ./umodbus:/root/.micropython/lib/umodbus
       - ./mpy_unittest.py:/root/.micropython/lib/mpy_unittest.py
       - ./tests/ulogging.py:/root/.micropython/lib/ulogging.py
     depends_on:
-      - micropython-client
+      - micropython-server
     command:
       - /bin/bash
       - -c

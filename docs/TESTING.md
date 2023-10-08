@@ -96,13 +96,13 @@ the containers. All "dynamic" data is shared via `volumes`.
 ##### Overview
 
 The TCP integration tests defined by `test_tcp_example.py` uses the
-`Dockerfile.client_tcp` and `Dockerfile.test_examples`.
+`Dockerfile.server_tcp` and `Dockerfile.test_examples`.
 
 A network bridge is created with fixed IPv4 addresses in order to bind the
-client to a known IP and let the host reach it on that predefined IP.
+server to a known IP and let the client reach it on that predefined IP.
 
-The port defined in `tcp_client_example.py`, executed by
-`Dockerfile.client_tcp` has to be open, exposed to the `micropython-host`
+The port defined in `tcp_server_example.py`, executed by
+`Dockerfile.server_tcp` has to be open, exposed to the `micropython-client`
 service running `Dockerfile.test_examples` and optionally exposed in the
 `docker-compose-tcp-test.yaml` file.
 
@@ -113,7 +113,7 @@ the expected data.
 ##### Usage
 
 ```bash
-docker compose -f docker-compose-tcp-test.yaml up --build --exit-code-from micropython-host --remove-orphans
+docker compose -f docker-compose-tcp-test.yaml up --build --exit-code-from micropython-client --remove-orphans
 ```
 
 #### RTU integration tests
@@ -131,32 +131,32 @@ like [`any()`](fakes.machine.UART.any), [`read()`](fakes.machine.UART.read) and
 During the initialisation of the fake UART a simple and very basic socket
 request is made to `172.25.0.2`, a predefined IP address, see
 `docker-compose-rtu-test.yaml`. In case no response is received, a socket based
-server is started. It is thereby important to start the RTU client before the
-RTU host. The RTU host will perform the same check during the UART init, but
+server is started. It is thereby important to start the RTU server before the
+RTU client. The RTU client will perform the same check during the UART init, but
 will reach the (already running) socket server and connect to it.
 
 The data provided to the [`write()`](fakes.machine.UART.write) call of the RTU
-host, will be sent to the background socket server of the RTU client and be
+client, will be sent to the background socket server of the RTU server and be
 read inside the [`get_request()`](umodbus.serial.Serial.get_request) function
 which is constantly called by the [`process()`](umodbus.modbus.Modbus.process)
 function.
 
-After it has been processed from Modbus perspective, the RTU client response
+After it has been processed from Modbus perspective, the RTU server response
 will then be put by the [`write()`](fakes.machine.UART.write) function into a
-queue on RTU client side, picked up by the RTU client background socket server
-thread and sent back to the RTU host where it is made available via the
+queue on RTU server side, picked up by the RTU server background socket server
+thread and sent back to the RTU client where it is made available via the
 [`read()`](fakes.machine.UART.read) function.
 
 ##### Overview
 
 The RTU integration tests defined by `test_rtu_example.py` uses the
-`Dockerfile.client_rtu` and `Dockerfile.test_examples`.
+`Dockerfile.server_rtu` and `Dockerfile.test_examples`.
 
 A network bridge is created with fixed IPv4 addresses in order to bind the
-client to a known IP and let the host reach it on that predefined IP.
+server to a known IP and let the client reach it on that predefined IP.
 
-The port defined in `rtu_client_example.py`, executed by
-`Dockerfile.client_rtu` has to be open, exposed to the `micropython-host`
+The port defined in `rtu_server_example.py`, executed by
+`Dockerfile.server_rtu` has to be open, exposed to the `micropython-client`
 service running `Dockerfile.test_examples` and optionally exposed in the
 `docker-compose-rtu-test.yaml` file.
 
@@ -167,7 +167,7 @@ the expected data.
 ##### Usage
 
 ```bash
-docker compose -f docker-compose-rtu-test.yaml up --build --exit-code-from micropython-host-rtu --remove-orphans
+docker compose -f docker-compose-rtu-test.yaml up --build --exit-code-from micropython-client-rtu --remove-orphans
 ```
 
 <!-- Links -->

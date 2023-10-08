@@ -27,20 +27,23 @@ def exit():
 
 # ===============================================
 # RTU Slave setup
-# act as client, provide Modbus data via RTU to a host device
-# ModbusRTU can get serial requests from a host device to provide/set data
+slave_addr = 10             # address on bus of the client/slave
+
+# RTU Master setup
+# act as client, collect Modbus data via RTU from a client device
+# ModbusRTU can perform serial requests to a client device to get/set data
 # check MicroPython UART documentation
 # https://docs.micropython.org/en/latest/library/machine.UART.html
 # for Device/Port specific setup
 #
 # RP2 needs "rtu_pins = (Pin(4), Pin(5))" whereas ESP32 can use any pin
-# the following example is for an ESP32.
+# the following example is for an ESP32
 # For further details check the latest MicroPython Modbus RTU documentation
 # example https://micropython-modbus.readthedocs.io/en/latest/EXAMPLES.html#rtu
 rtu_pins = (25, 26)         # (TX, RX)
-slave_addr = 10             # address on bus as client
 baudrate = 9600
 uart_id = 1
+read_timeout = 120
 
 try:
     from machine import Pin
@@ -77,11 +80,3 @@ except Exception as e:
     raise e
 
 print('Using pins {} with UART ID {}'.format(rtu_pins, uart_id))
-
-# alternatively the register definitions can also be loaded from a JSON file
-# this is always done if Docker is used for testing purpose in order to keep
-# the client registers in sync with the test registers
-if IS_DOCKER_MICROPYTHON:
-    import json
-    with open('registers/example.json', 'r') as file:
-        register_definitions = json.load(file)

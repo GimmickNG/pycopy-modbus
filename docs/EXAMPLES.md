@@ -20,8 +20,8 @@ necessary, the `uart_id` parameter may has to be adapted to the pins used.
 
 ### Client/Slave
 
-With this example the device is acting as client (slave) and providing data via
-RTU (serial/UART) to a requesting host device.
+With this example the device is acting as server (slave) and providing data via
+RTU (serial/UART) to a requesting client (master) device.
 
 ```python
 from umodbus.serial import ModbusRTU
@@ -43,9 +43,9 @@ uart_id = 1
 # rtu_pins = (Pin(PB6), Pin(PB7))   # (TX, RX)
 # uart_id = 1
 
-slave_addr = 10             # address on bus as client
+slave_addr = 10             # address on bus as server
 
-client = ModbusRTU(
+server = ModbusRTU(
     addr=slave_addr,        # address on bus
     pins=rtu_pins,          # given as tuple (TX, RX)
     # baudrate=9600,        # optional, default 9600
@@ -88,27 +88,27 @@ register_definitions = {
 }
 
 # use the defined values of each register type provided by register_definitions
-client.setup_registers(registers=register_definitions)
+server.setup_registers(registers=register_definitions)
 
 while True:
     try:
-        result = client.process()
+        result = server.process()
     except KeyboardInterrupt:
-        print('KeyboardInterrupt, stopping RTU client...')
+        print('KeyboardInterrupt, stopping RTU server...')
         break
     except Exception as e:
         print('Exception during execution: {}'.format(e))
 ```
 
-### Host/Master
+### Client/Master
 
-With this example the device is acting as host (master) and requesting on or
+With this example the device is acting as client (master) and requesting on or
 setting data at a RTU (serial/UART) client/slave.
 
 ```python
 from umodbus.serial import Serial as ModbusRTUMaster
 
-# RTU Host/Master setup
+# RTU Client/Master setup
 
 # the following definition is for an ESP32
 rtu_pins = (25, 26)         # (TX, RX)
@@ -125,7 +125,7 @@ uart_id = 1
 # rtu_pins = (Pin(PB6), Pin(PB7))   # (TX, RX)
 # uart_id = 1
 
-host = ModbusRTUMaster(
+client = ModbusRTUMaster(
     pins=rtu_pins,          # given as tuple (TX, RX)
     # baudrate=9600,        # optional, default 9600
     # data_bits=8,          # optional, default 8
@@ -135,16 +135,16 @@ host = ModbusRTUMaster(
     uart_id=uart_id         # optional, default 1, see port specific documentation
 )
 
-coil_status = host.read_coils(slave_addr=10, starting_addr=123, coil_qty=1)
+coil_status = client.read_coils(slave_addr=10, starting_addr=123, coil_qty=1)
 print('Status of coil 123: {}'.format(coil_status))
 ```
 
 ## TCP
 
-### Client/Slave
+### Server/Slave
 
-With this example the device is acting as client (slave) and providing data via
-TCP (socket) to a requesting host device.
+With this example the device is acting as server (slave) and providing data via
+TCP (socket) to a requesting client device.
 
 ```python
 import network
@@ -162,11 +162,11 @@ station = network.WLAN(network.STA_IF)
 local_ip = station.ifconfig()[0]
 tcp_port = 502      # port to listen for requests/providing data
 
-client = ModbusTCP()
+server = ModbusTCP()
 
 # check whether client has been bound to an IP and a port
-if not client.get_bound_status():
-    client.bind(local_ip=local_ip, local_port=tcp_port)
+if not server.get_bound_status():
+    server.bind(local_ip=local_ip, local_port=tcp_port)
 
 register_definitions = {
     "COILS": {
@@ -200,39 +200,39 @@ register_definitions = {
 }
 
 # use the defined values of each register type provided by register_definitions
-client.setup_registers(registers=register_definitions)
+server.setup_registers(registers=register_definitions)
 
 while True:
     try:
-        result = client.process()
+        result = server.process()
     except KeyboardInterrupt:
-        print('KeyboardInterrupt, stopping TCP client...')
+        print('KeyboardInterrupt, stopping TCP server...')
         break
     except Exception as e:
         print('Exception during execution: {}'.format(e))
 ```
 
-### Host/Master
+### Client/Master
 
-With this example the device is acting as host (master) and requesting on or
-setting data at a TCP (socket) client/slave.
+With this example the device is acting as client (master) and requesting on or
+setting data at a TCP (socket) server (slave).
 
 ```python
 from umodbus.tcp import TCP as ModbusTCPMaster
 
 # valid network connections shall be made here
 
-# RTU Host/Master setup
+# RTU Client/Master setup
 slave_tcp_port = 502            # port to send request on
 slave_ip = '192.168.178.69'     # IP address of client, to be adjusted
 
-host = ModbusTCPMaster(
+client = ModbusTCPMaster(
     slave_ip=slave_ip,
     slave_port=slave_tcp_port,
     # timeout=5.0               # optional, timeout in seconds, default 5.0
 )
 
-coil_status = host.read_coils(slave_addr=10, starting_addr=123, coil_qty=1)
+coil_status = client.read_coils(slave_addr=10, starting_addr=123, coil_qty=1)
 print('Status of coil 123: {}'.format(coil_status))
 ```
 
@@ -244,7 +244,7 @@ Callbacks can be registered to be executed *after* setting a register with
 ```{note}
 Getter callbacks can be registered for all registers with the `on_get_cb`
 parameter whereas the `on_set_cb` parameter is only available for coils and
-holding registers as only those can be set by a external host.
+holding registers as only those can be set by a external client.
 ```
 
 ```{eval-rst}
@@ -278,10 +278,10 @@ register_definitions = {
 }
 
 # use the defined values of each register type provided by register_definitions
-client.setup_registers(registers=register_definitions)
+server.setup_registers(registers=register_definitions)
 
 # callbacks can also be defined after a register setup has been performed
-client.add_coil(
+server.add_coil(
     address=123,
     value=bool(1),
     on_set_cb=my_coil_set_cb,

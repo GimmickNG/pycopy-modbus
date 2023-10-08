@@ -6,7 +6,7 @@ Main script
 
 Do your stuff here, this file is similar to the loop() function on Arduino
 
-Create a ModbusBridge betweeen a RTU client (slave) and act as host (master)
+Create a ModbusBridge betweeen a RTU server (slave) and act as client (master)
 on TCP to provide the data of the client and accept settings of new register
 values on it.
 
@@ -40,43 +40,43 @@ mb_bridge = ModbusBridge(register_file=register_file)
 print('##### MAIN TEST PRINT CONTENT BEGIN #####')
 print('Register file: {}'.format(mb_bridge.register_file))
 print('Connection settings:')
-print('\t Host: {}'.format(mb_bridge.connection_settings_host))
-print('\t Client: {}'.format(mb_bridge.connection_settings_client))
-print('\t Host Unit: {}'.format(mb_bridge.host_unit))
-print('\t Client Unit: {}'.format(mb_bridge.client_unit))
+print('\t Client: {}'.format(mb_bridge.connection_settings_host))
+print('\t Server: {}'.format(mb_bridge.connection_settings_client))
+print('\t Client Unit: {}'.format(mb_bridge.host_unit))
+print('\t Server Unit: {}'.format(mb_bridge.client_unit))
 
-# define and apply Modbus TCP host settings
-host_settings = {
+# define and apply Modbus TCP client settings
+client_settings = {
     'type': 'tcp',
     'unit': tcp_port,
     'address': -1,
     'baudrate': -1,
     'mode': 'master'
 }
-mb_bridge.connection_settings_host = host_settings
+mb_bridge.connection_settings_host = client_settings
 
 print('Updated connection settings:')
-print('\t Host: {}'.format(mb_bridge.connection_settings_host))
-print('\t Client: {}'.format(mb_bridge.connection_settings_client))
-print('\t Host Unit: {}'.format(mb_bridge.host_unit))
-print('\t Client Unit: {}'.format(mb_bridge.client_unit))
+print('\t Client: {}'.format(mb_bridge.connection_settings_host))
+print('\t Server: {}'.format(mb_bridge.connection_settings_client))
+print('\t Client Unit: {}'.format(mb_bridge.host_unit))
+print('\t Server Unit: {}'.format(mb_bridge.client_unit))
 
 # setup Modbus connections to host and client
 mb_bridge.setup_connection(pins=rtu_pins)   # (TX, RX)
 
 print('Modbus instances:')
-print('\t Act as Host: {} on {}'.format(mb_bridge.host, mb_bridge.host_unit))
-print('\t Act as Client: {} on {}'.format(mb_bridge.client,
+print('\t Act as Client: {} on {}'.format(mb_bridge.host, mb_bridge.host_unit))
+print('\t Act as Server: {} on {}'.format(mb_bridge.client,
                                           mb_bridge.client_unit))
 
 # start collecting latest RTU client data in thread and TCP data provision
 mb_bridge.collecting_client_data = True
 mb_bridge.provisioning_host_data = True
 
-print('Run client and host for {} seconds'.format(run_time))
-print('Collect latest client data every {} seconds'.
+print('Run server and client for {} seconds'.format(run_time))
+print('Collect latest server data every {} seconds'.
       format(mb_bridge.collection_interval))
-print('Synchronize Host-Client every {} seconds'.
+print('Synchronize Client-Server every {} seconds'.
       format(mb_bridge.synchronisation_interval))
 
 print('##### MAIN TEST PRINT CONTENT END #####')

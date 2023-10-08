@@ -13,6 +13,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -->
 
 <!-- ## [Unreleased] -->
+### Changed
+- Align terms with Modbus organization:
+  - `Host` is now `Client` (i.e. sends requests)
+  - `Client` is now `Server` (i.e. receives requests)
+  - Renamed docker files:
+     - `Dockerfile.client_tcp` -> `Dockerfile.server_tcp`
+     - `Dockerfile.host_tcp` -> `Dockerfile.client_tcp`
+     - `Dockerfile.client_rtu` -> `Dockerfile.server_rtu`
+     - `Dockerfile.host_rtu` -> `Dockerfile.client_rtu`
+  - N.B.: Previous changelog versions (below) use old naming scheme for posterity, but link to the new files.
 
 ## Released
 ## [2.3.7] - 2023-07-19
@@ -71,7 +81,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Split [SETUP](docs/SETUP.md) into [INSTALLATION](docs/INSTALLATION.md)
 - Split [USAGE](docs/USAGE.md) into [TESTING](docs/TESTING.md) and [EXAMPLES](docs/EXAMPLES.md)
-- Use callback to reset register data in [RTU client example](examples/rtu_client_example.py)
+- Use callback to reset register data in [RTU client example](examples/rtu_server_example.py)
 - Update docs copyright year to 2023
 - Use fakes machine module instead of classic Mock in docs config file
 
@@ -92,7 +102,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2.3.0] - 2023-01-03
 ### Added
 - Custom callback functions can be registered on client (ModbusRTU or ModbusTCP) side with new parameters `on_set_cb` and `on_get_cb` available from [modbus.py](umodbus/modbus.py) functions `add_coil` and `add_hreg`. Functions `add_ist` and `add_ireg` support only `on_get_cb`, see #31
-- Example callback usage shown in [TCP client example](examples/tcp_client_example.py)
+- Example callback usage shown in [TCP client example](examples/tcp_server_example.py)
 - Documentation for callback functions in USAGE
 
 ### Changed
@@ -101,9 +111,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2.2.0] - 2023-01-03
 ### Added
 - [Fake machine module](fakes/machine.py) with UART and Pin class to be used on Unix MicroPython container for RTU tests and examples, see #47
-- [RTU host example script](examples/rtu_host_example.py)
+- [RTU host example script](examples/rtu_client_example.py)
 - [RTU docker compose file](docker-compose-rtu.yaml) and [RTU docker compose file test](docker-compose-rtu-test.yaml) based in MicroPython 1.18 image
-- [RTU client Dockerfile](Dockerfile.client_rtu) and [RTU host Dockerfile](Dockerfile.host_rtu) based on MicroPython 1.18 image
+- [RTU client Dockerfile](Dockerfile.server_rtu) and [RTU host Dockerfile](Dockerfile.host_rtu) based on MicroPython 1.18 image
 - Initial [RTU examples unittest](tests/test_rtu_example.py)
 - RTU example section for Client and Host in USAGE
 
@@ -187,7 +197,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Use default values for all registers defined in the [example JSON](registers/example.json)
-- [TCP host example](examples/tcp_host_example.py) and [TCP client example](examples/tcp_client_example.py) define a static IP address and skip further WiFi setup steps in case a Docker usage is detected by a failing import of the `network` module, contributes to #16
+- [TCP host example](examples/tcp_client_example.py) and [TCP client example](examples/tcp_server_example.py) define a static IP address and skip further WiFi setup steps in case a Docker usage is detected by a failing import of the `network` module, contributes to #16
 - Define all Modbus function codes as `const()` to avoid external modifications, contributes to #18
 - Remove dependency to `Serial` and `requests` from `umodbus.modbus`, see #18
 - `ModbusRTU` class is part of [serial.py](umodbus/serial.py), see #18
@@ -209,7 +219,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.2.0] - 2022-11-13
 ### Added
-- [TCP host example script](examples/tcp_host_example.py)
+- [TCP host example script](examples/tcp_client_example.py)
 - JSON file to set registers on TCP/RTU device
 - Bash script to wrap manipulation of TCP modbus register data
 - [Example boot script](examples/boot.py)
@@ -219,14 +229,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [USAGE](USAGE.md) and [SETUP](SETUP.md) files with more details
 
 ### Changed
-- Add more info to [TCP client example script](examples/tcp_client_example.py)
+- Add more info to [TCP client example script](examples/tcp_server_example.py)
 - Update [modules submodule](https://github.com/brainelectronics/python-modules/tree/43bad716b7db27db07c94c2d279cee57d0c8c753) to `1.3.0`
 - Line breaks are no longer used in this changelog for enumerations
 - Issues are referenced as `#123` instead of `[#123][ref-issue-123]` to avoid explicit references at the bottom or some other location in the file
 - Scope of contents permissions in release and test release workflow is now `write` to use auto release creation
 
 ### Fixed
-- Typo in [RTU client example script](examples/rtu_client_example.py)
+- Typo in [RTU client example script](examples/rtu_server_example.py)
 
 ## [1.1.1] - 2022-11-09
 ### Fixed

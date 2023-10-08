@@ -16,7 +16,7 @@ exec(open(here / 'umodbus' / 'version.py').read())
 setup(
     name='micropython-modbus',
     version=__version__,
-    description="MicroPython ModBus TCP and RTU library supporting client and host mode",
+    description="MicroPython ModBus TCP and RTU library supporting client and server mode",
     long_description=long_description,
     long_description_content_type='text/markdown',
     url='https://github.com/brainelectronics/micropython-modbus',
@@ -27,7 +27,7 @@ setup(
         'Intended Audience :: Developers',
         'License :: OSI Approved :: MIT License',
     ],
-    keywords='micropython, modbus, tcp, rtu, client, host, library',
+    keywords='micropython, modbus, tcp, rtu, client, host, server, library',
     project_urls={
         'Bug Reports': 'https://github.com/brainelectronics/micropython-modbus/issues',
         'Source': 'https://github.com/brainelectronics/micropython-modbus',

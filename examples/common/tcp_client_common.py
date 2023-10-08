@@ -8,6 +8,7 @@ Defines the common imports and functions for running the client
 examples for both the synchronous and asynchronous TCP clients.
 """
 
+# system packages
 import time
 
 IS_DOCKER_MICROPYTHON = False
@@ -15,6 +16,13 @@ try:
     import network
 except ImportError:
     IS_DOCKER_MICROPYTHON = True
+
+
+def exit():
+    if IS_DOCKER_MICROPYTHON:
+        import sys
+        sys.exit(0)
+
 
 # ===============================================
 if IS_DOCKER_MICROPYTHON is False:
@@ -41,12 +49,19 @@ if IS_DOCKER_MICROPYTHON is False:
 
 # ===============================================
 # TCP Slave setup
-tcp_port = 502              # port to listen to
+slave_tcp_port = 502            # port to listen to
+slave_addr = 10                 # bus address of client
 
+# set IP address of the MicroPython device acting as client (slave)
 if IS_DOCKER_MICROPYTHON:
-    local_ip = '172.24.0.2'     # static Docker IP address
+    slave_ip = '172.24.0.2'     # static Docker IP address
 else:
-    # set IP address of the MicroPython device explicitly
-    # local_ip = '192.168.4.1'    # IP address
-    # or get it from the system after a connection to the network has been made
-    local_ip = station.ifconfig()[0]
+    slave_ip = '192.168.178.69'     # IP address
+
+"""
+# alternatively the register definitions can also be loaded from a JSON file
+import json
+
+with open('registers/example.json', 'r') as file:
+    register_definitions = json.load(file)
+"""

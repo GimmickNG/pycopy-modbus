@@ -6,8 +6,8 @@ Main script
 
 Do your stuff here, this file is similar to the loop() function on Arduino
 
-Create a Modbus RTU client (slave) which can be requested for data or set with
-specific values by a host device.
+Create a Modbus RTU client (master) which requests or sets data on a client
+device.
 
 The RTU communication pins can be choosen freely (check MicroPython device/
 port specific limitations).
@@ -16,55 +16,43 @@ bus address and UART communication speed can be defined by the user.
 """
 
 # import modbus client classes
-from umodbus.serial import ModbusRTU
-from examples.common.register_definitions import register_definitions, setup_callbacks
+from umodbus.serial import Serial as ModbusRTUMaster
+from examples.common.register_definitions import register_definitions
 from examples.common.rtu_client_common import IS_DOCKER_MICROPYTHON
-from examples.common.rtu_client_common import slave_addr, rtu_pins
-from examples.common.rtu_client_common import baudrate, uart_id, exit
+from examples.common.rtu_client_common import rtu_pins, baudrate
+from examples.common.rtu_client_common import slave_addr, uart_id, read_timeout, exit
+from examples.common.sync_client_tests import run_client_tests
 
-
-client = ModbusRTU(
-    addr=slave_addr,        # address on bus
-    pins=rtu_pins,          # given as tuple (TX, RX)
-    baudrate=baudrate,      # optional, default 9600
-    # data_bits=8,          # optional, default 8
-    # stop_bits=1,          # optional, default 1
-    # parity=None,          # optional, default None
-    # ctrl_pin=12,          # optional, control DE/RE
-    uart_id=uart_id         # optional, default 1, see port specific docs
+client = ModbusRTUMaster(
+    pins=rtu_pins,                  # given as tuple (TX, RX)
+    baudrate=baudrate,              # optional, default 9600
+    # data_bits=8,                  # optional, default 8
+    # stop_bits=1,                  # optional, default 1
+    # parity=None,                  # optional, default None
+    # ctrl_pin=12,                  # optional, control DE/RE
+    uart_id=uart_id,                # optional, default 1, see port specific docs
+    read_timeout=read_timeout       # optional, default 120
 )
 
 if IS_DOCKER_MICROPYTHON:
-    import json
     # works only with fake machine UART
-    assert client._itf._uart._is_server is True
-    with open('registers/example.json', 'r') as file:
-        register_definitions = json.load(file)  # noqa: F811
+    assert client._uart._is_server is False
 
 
-# reset all registers back to their default value with a callback
-setup_callbacks(client, register_definitions)
+"""
+# alternatively the register definitions can also be loaded from a JSON file
+import json
 
-print('Setting up registers ...')
-# use the defined values of each register type provided by register_definitions
-client.setup_registers(registers=register_definitions)
-# alternatively use dummy default values (True for bool regs, 999 otherwise)
-# client.setup_registers(registers=register_definitions, use_default_vals=True)
-print('Register setup done')
+with open('registers/example.json', 'r') as file:
+    register_definitions = json.load(file)
+"""
 
-print('Serving as RTU client on address {} at {} baud'.
+print('Requesting and updating data on RTU server at address {} with {} baud'.
       format(slave_addr, baudrate))
+print()
 
-while True:
-    try:
-        result = client.process()
-    except KeyboardInterrupt:
-        print('KeyboardInterrupt, stopping RTU client...')
-        break
-    except Exception as e:
-        print('Exception during execution: {}'.format(e))
-        raise
-
-print("Finished providing/accepting data as client")
+run_client_tests(client=client,
+                 slave_addr=slave_addr,
+                 register_definitions=register_definitions)
 
 exit()

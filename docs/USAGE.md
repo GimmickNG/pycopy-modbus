@@ -25,7 +25,7 @@ board and others are provided with this repo.
 
 If only an interaction with a single register is intended no dictionary needs
 to be defined of course. The onwards explanations assume a bigger setup of
-registers on the same target/client/slave device.
+registers on the same target/server/slave device.
 
 The JSON file/dictionary shall follow the following pattern/structure
 
@@ -40,8 +40,8 @@ The JSON file/dictionary shall follow the following pattern/structure
             "description": "Optional description of the coil",
             "range": "[0, 1]",  # may provide a range of the value, only for documentation purpose
             "unit": "BOOL",     # may provide a unit of the value, only for documentation purpose
-            "on_set_cb": my_function,   # callback function executed on the client after a new value has been set
-            "on_get_cb": some_function  # callback function executed on the client after a value has been requested
+            "on_set_cb": my_function,   # callback function executed on the server after a new value has been set
+            "on_get_cb": some_function  # callback function executed on the server after a value has been requested
         }
     },
     "HREGS": {          # this key shall contain all holding registers
@@ -52,8 +52,8 @@ The JSON file/dictionary shall follow the following pattern/structure
             "description": "Optional description of the holding register",
             "range": "[0, 65535]",
             "unit": "Hz",
-            "on_set_cb": my_function,   # callback function executed on the client after a new value has been set
-            "on_get_cb": some_function  # callback function executed on the client after a value has been requested
+            "on_set_cb": my_function,   # callback function executed on the server after a new value has been set
+            "on_get_cb": some_function  # callback function executed on the server after a value has been requested
         },
     },
     "ISTS": {           # this key shall contain all input status registers
@@ -64,7 +64,7 @@ The JSON file/dictionary shall follow the following pattern/structure
             "description": "Optional description of the input status register",
             "range": "[0, 1]",
             "unit": "activated",
-            "on_get_cb": some_function  # callback function executed on the client after a value has been requested
+            "on_get_cb": some_function  # callback function executed on the server after a value has been requested
         }
     },
     "IREGS": {          # this key shall contain all input registers
@@ -75,7 +75,7 @@ The JSON file/dictionary shall follow the following pattern/structure
             "description": "Optional description of the static input register",
             "range": "[0, 65535]",
             "unit": "millivolt",
-            "on_get_cb": some_function  # callback function executed on the client after a value has been requested
+            "on_get_cb": some_function  # callback function executed on the server after a value has been requested
         }
     }
 }
@@ -96,7 +96,7 @@ would look like
 }
 ```
 
-In order to act as client/slave device the same structure can be used. If no
+In order to act as server/slave device the same structure can be used. If no
 `val` element is found in the structure the default values are
 
 | Type  | Function Code | Default value |
@@ -165,7 +165,7 @@ depending on the actual device coil states of course.
 
 #### Value
 
-The key `val` defines the value of registers to be set on the target/client
+The key `val` defines the value of registers to be set on the target/server
 device.
 
 According to the Modbus specification the value (range) depends on the type
@@ -199,14 +199,14 @@ be `percent`.
 ##### Optional callbacks
 
 The optional keys `on_set_cb` and `on_get_cb` can be used to register a
-callback function on client side which is executed **after** a new value has
+callback function on server side which is executed **after** a new value has
 been set or **before** the response of a requested register value has been
 sent.
 
 ```{note}
 Getter callbacks can be registered for all registers with the `on_get_cb`
 parameter whereas the `on_set_cb` parameter is only available for coils and
-holding registers as only those can be set by a external host.
+holding registers as only those can be set by a external client.
 ```
 
 The callback function shall have the following three parameters:
@@ -218,8 +218,8 @@ The callback function shall have the following three parameters:
 | `val`      | Union[bool, int, Tuple[bool], Tuple[int], List[bool], List[int]] | Current value of register |
 
 ```{note}
-The function parameter `val` is always an unsigned value. The host device
-requesting data is interpreting the data as signed or not, the client device
+The function parameter `val` is always an unsigned value. The client device
+requesting data is interpreting the data as signed or not, the server device
 has no informations about it. Setting a holding register to `-4` will be
 returned as `65532` on a registered callback.
 ```
@@ -239,7 +239,7 @@ def my_coil_get_cb(reg_type, address, val):
           format(reg_type, address, val))
 
 
-# assuming the client  specific setup (port/ID settings, network connections,
+# assuming the server  specific setup (port/ID settings, network connections,
 # UART setup) has already been done
 # Check the provided examples for further details
 
@@ -258,12 +258,12 @@ register_definitions = {
 
 print('Setting up registers ...')
 # use the defined values of each register type provided by register_definitions
-client.setup_registers(registers=register_definitions)
+server.setup_registers(registers=register_definitions)
 # alternatively use dummy default values (True for bool regs, 999 otherwise)
-# client.setup_registers(registers=register_definitions, use_default_vals=True)
+# server.setup_registers(registers=register_definitions, use_default_vals=True)
 
 # callbacks can also be defined after a register setup has been performed
-client.add_coil(
+server.add_coil(
     address=123,
     value=bool(1),
     on_set_cb=my_coil_set_cb,
@@ -273,9 +273,9 @@ print('Register setup done')
 
 while True:
     try:
-        result = client.process()
+        result = server.process()
     except KeyboardInterrupt:
-        print('KeyboardInterrupt, stopping TCP client...')
+        print('KeyboardInterrupt, stopping TCP server...')
         break
     except Exception as e:
         print('Exception during execution: {}'.format(e))
@@ -313,8 +313,8 @@ This section describes the usage of the following implemented functions
 which are available on Modbus RTU and Modbus TCP as shown in the
 [GitHub examples folder](https://github.com/brainelectronics/micropython-modbus/tree/develop/examples) and the [examples chapter](EXAMPLES.md)
 
-All described functions require a successful setup of a Host communicating
-to/with a Client device which is providing the data and accepting the new data.
+All described functions require a successful setup of a Client communicating
+to/with a Server device which is providing the data and accepting the new data.
 
 ### Coils
 
@@ -336,7 +336,7 @@ a single coil status can be read.
 coil_address = 125  # register to start reading
 coil_qty = 2        # amount of registers to read
 
-coil_status = host.read_coils(
+coil_status = client.read_coils(
     slave_addr=slave_addr,
     starting_addr=coil_address,
     coil_qty=coil_qty)
@@ -365,7 +365,7 @@ a single coil status can be set.
 coil_address = 123  # register to start writing
 new_coil_val = 0    # new coil value
 
-operation_status = host.write_single_coil(
+operation_status = client.write_single_coil(
     slave_addr=slave_addr,
     output_address=coil_address,
     output_value=new_coil_val)
@@ -389,7 +389,7 @@ multiple coil states can be set at once.
 coil_address = 126          # register to start writing
 new_coil_vals = [1, 1, 0]   # new coil values for 126, 127 and 128
 
-operation_status = self._host.write_multiple_coils(
+operation_status = self._client.write_multiple_coils(
             slave_addr=slave_addr,
             starting_address=coil_address,
             output_values=new_coil_vals)
@@ -418,7 +418,7 @@ discrete inputs can be read.
 ist_address = 68    # register to start reading
 input_qty = 2       # amount of registers to read
 
-input_status = host.read_discrete_inputs(
+input_status = client.read_discrete_inputs(
     slave_addr=slave_addr,
     starting_addr=ist_address,
     input_qty=input_qty)
@@ -430,7 +430,7 @@ print('Status of IST {}: {}'.format(ist_address, input_status))
 ### Holding registers
 
 Holding registers can be get as and set to any value between `0` and `65535`.
-If supported by the client device, data can be marked as signed values to
+If supported by the server device, data can be marked as signed values to
 represent `-32768` through `32767`.
 
 #### Read
@@ -448,7 +448,7 @@ a single holding register can be read.
 hreg_address = 94   # register to start reading
 register_qty = 3    # amount of registers to read
 
-register_value = host.read_holding_registers(
+register_value = client.read_holding_registers(
     slave_addr=slave_addr,
     starting_addr=hreg_address,
     register_qty=register_qty,
@@ -478,7 +478,7 @@ a single holding register can be set.
 hreg_address = 93   # register to start writing
 new_hreg_val = 44   # new holding register value
 
-operation_status = host.write_single_register(
+operation_status = client.write_single_register(
     slave_addr=slave_addr,
     register_address=hreg_address,
     register_value=new_hreg_val,
@@ -503,7 +503,7 @@ holding register can be set at once.
 hreg_address = 94                   # register to start writing
 new_hreg_vals = [54, -12, 30001]    # new holding register values for 94, 95, 96
 
-operation_status = self._host.write_multiple_registers(
+operation_status = self._client.write_multiple_registers(
     slave_addr=slave_addr,
     starting_address=hreg_address,
     register_values=new_hreg_vals,
@@ -516,7 +516,7 @@ print('Result of setting HREG {}: {}'.format(hreg_address, operation_status))
 ### Input registers
 
 Input registers can hold values between `0` and `65535`. If supported by the
-client device, data can be marked as signed values to represent `-32768`
+server device, data can be marked as signed values to represent `-32768`
 through `32767`. Unlike [holding registers](USAGE.md#holding-registers), input
 registers cannot be set.
 
@@ -535,7 +535,7 @@ input registers can be read.
 ireg_address = 11   # register to start reading
 register_qty = 3    # amount of registers to read
 
-register_value = host.read_input_registers(
+register_value = client.read_input_registers(
     slave_addr=slave_addr,
     starting_addr=ireg_address,
     register_qty=register_qty,
@@ -553,13 +553,13 @@ each other.
 Adjust the WiFi network name (SSID) and password to be able to connect to your
 personal network or remove that section if a wired network connection is used.
 
-### Client
+### Server
 
-The client, former known as slave, provides some dummy registers which can be
+The server, formerly known as slave, provides some dummy registers which can be
 read and updated by another device.
 
 ```bash
-cp examples/tcp_client_example.py /pyboard/main.py
+cp examples/tcp_server_example.py /pyboard/main.py
 cp examples/boot.py /pyboard/boot.py
 repl
 ```
@@ -576,22 +576,22 @@ Connected to WiFi.
 ('192.168.178.69', '255.255.255.0', '192.168.178.1', '192.168.178.1')
 Setting up registers ...
 Register setup done
-Serving as TCP client on 192.168.178.69:502
+Serving as TCP server on 192.168.178.69:502
 ```
 
-### Host
+### Client
 
-The host, former known as master, requests and updates some dummy registers of
+The client, former known as master, requests and updates some dummy registers of
 another device.
 
 ```bash
-cp examples/tcp_host_example.py /pyboard/main.py
+cp examples/tcp_client_example.py /pyboard/main.py
 cp examples/boot.py /pyboard/boot.py
 repl
 ```
 
 Inside the REPL press CTRL+D to perform a soft reboot. The device will request
-and update registers of the Client after a few seconds. The log output might
+and update registers of the Server after a few seconds. The log output might
 look similar to this
 
 ```
@@ -601,7 +601,7 @@ Waiting for WiFi connection...
 Waiting for WiFi connection...
 Connected to WiFi.
 ('192.168.178.42', '255.255.255.0', '192.168.178.1', '192.168.178.1')
-Requesting and updating data on TCP client at 192.168.178.69:502
+Requesting and updating data on TCP server at 192.168.178.69:502
 
 Status of COIL 123: [True]
 Result of setting COIL 123: True
@@ -617,7 +617,7 @@ Status of IREG 10: (60001,)
 Resetting register data to default values...
 Result of setting COIL 42: True
 
-Finished requesting/setting data on client
+Finished requesting/setting data on server
 MicroPython v1.18 on 2022-01-17; ESP32 module (spiram) with ESP32
 Type "help()" for more information.
 >>>
@@ -634,13 +634,13 @@ as tuple of `Pin`, like `rtu_pins = (Pin(4), Pin(5))` and the specific
 `uart_id=1` for those, whereas ESP32 boards can use almost alls pins for UART
 communication and shall be given as `rtu_pins = (25, 26)`.
 
-### Client
+### Server
 
-The client, former known as slave, provides some dummy registers which can be
+The server, former known as slave, provides some dummy registers which can be
 read and updated by another device.
 
 ```bash
-cp examples/rtu_client_example.py /pyboard/main.py
+cp examples/rtu_server_example.py /pyboard/main.py
 cp examples/boot.py /pyboard/boot.py
 repl
 ```
@@ -653,28 +653,28 @@ MPY: soft reboot
 System booted successfully!
 Setting up registers ...
 Register setup done
-Serving as RTU client on address 10 at 9600 baud
+Serving as RTU server on address 10 at 9600 baud
 ```
 
-### Host
+### Client
 
-The host, former known as master, requests and updates some dummy registers of
+The client, former known as master, requests and updates some dummy registers of
 another device.
 
 ```bash
-cp examples/rtu_host_example.py /pyboard/main.py
+cp examples/rtu_client_example.py /pyboard/main.py
 cp examples/boot.py /pyboard/boot.py
 repl
 ```
 
 Inside the REPL press CTRL+D to perform a soft reboot. The device will request
-and update registers of the Client after a few seconds. The log output might
+and update registers of the Server after a few seconds. The log output might
 look similar to this
 
 ```
 MPY: soft reboot
 System booted successfully!
-Requesting and updating data on RTU client at address 10 with 9600 baud
+Requesting and updating data on RTU server at address 10 with 9600 baud
 
 Status of COIL 123: [True]
 Result of setting COIL 123: True
@@ -690,7 +690,7 @@ Status of IREG 10: (60001,)
 Resetting register data to default values...
 Result of setting COIL 42: True
 
-Finished requesting/setting data on client
+Finished requesting/setting data on server
 MicroPython v1.18 on 2022-01-17; ESP32 module (spiram) with ESP32
 Type "help()" for more information.
 >>>
@@ -707,7 +707,7 @@ comment of [`main.py`][ref-package-main-file].
 ## Classic development environment
 
 This section describes the necessary steps on the computer to read and/or write
-data from/to a Modbus TCP Client device.
+data from/to a Modbus TCP Server device.
 
 ```bash
 # Linux/Mac

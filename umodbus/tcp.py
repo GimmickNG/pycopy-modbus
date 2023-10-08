@@ -215,7 +215,7 @@ class TCP(CommonTCPFunctions, CommonModbusFunctions):
 
 
 class TCPServer(object):
-    """Modbus TCP host class"""
+    """Modbus TCP server class"""
     def __init__(self):
         self._sock: socket.socket = None
         self._client_sock: socket.socket = None

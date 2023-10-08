@@ -10,6 +10,27 @@
 version: "3.8"
 
 services:
+  micropython-server:
+    build:
+      context: .
+      dockerfile: Dockerfile.server_rtu
+    container_name: micropython-server
+    volumes:
+      - ./:/home
+      - ./umodbus:/root/.micropython/lib/umodbus
+      - ./fakes:/usr/lib/micropython
+      - ./tests/ulogging.py:/root/.micropython/lib/ulogging.py
+    expose:
+      - "65433"
+    ports:
+      # reach "micropython-server" at 172.25.0.2:65433, see networks
+      - "65433:65433"
+    networks:
+      serial_bridge:
+        # fix IPv4 address to be known and in the MicroPython scripts
+        # https://docs.docker.com/compose/compose-file/#ipv4_address
+        ipv4_address: 172.25.0.2
+
   micropython-client:
     build:
       context: .
@@ -20,29 +41,8 @@ services:
       - ./umodbus:/root/.micropython/lib/umodbus
       - ./fakes:/usr/lib/micropython
       - ./tests/ulogging.py:/root/.micropython/lib/ulogging.py
-    expose:
-      - "65433"
-    ports:
-      # reach "micropython-client" at 172.25.0.2:65433, see networks
-      - "65433:65433"
-    networks:
-      serial_bridge:
-        # fix IPv4 address to be known and in the MicroPython scripts
-        # https://docs.docker.com/compose/compose-file/#ipv4_address
-        ipv4_address: 172.25.0.2
-
-  micropython-host:
-    build:
-      context: .
-      dockerfile: Dockerfile.host_rtu
-    container_name: micropython-host
-    volumes:
-      - ./:/home
-      - ./umodbus:/root/.micropython/lib/umodbus
-      - ./fakes:/usr/lib/micropython
-      - ./tests/ulogging.py:/root/.micropython/lib/ulogging.py
     depends_on:
-      - micropython-client
+      - micropython-server
     networks:
       serial_bridge:
         # fix IPv4 address to be known and in the MicroPython scripts

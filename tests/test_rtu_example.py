@@ -24,9 +24,9 @@ class TestRtuExample(unittest.TestCase):
         # if enabled log data inside this test will be printed
         self.test_logger.disabled = False
 
-        self._client_addr = 10          # bus address of client
+        self._server_addr = 10          # bus address of server
 
-        self._host = ModbusRTUMaster(baudrate=9600, pins=(25, 26))  # (TX, RX)
+        self._client = ModbusRTUMaster(baudrate=9600, pins=(25, 26))  # (TX, RX)
 
         test_register_file = 'registers/example.json'
         try:
@@ -40,11 +40,11 @@ class TestRtuExample(unittest.TestCase):
 
     def test_setup(self) -> None:
         """Test successful setup of ModbusRTUMaster and the defined register"""
-        # although it is called "Master" the host is here a client connecting
-        # to one or more clients/slaves/devices which are providing data
+        # although it is called "Master" the client here connects
+        # to one or more servers/slaves/devices which are providing data
         # The reason for calling it "ModbusRTUMaster" is the status of having
-        # the functions to request or get data from other client/slave/devices
-        self.assertFalse(self._host._uart._is_server)
+        # the functions to request or get data from other server/slave/devices
+        self.assertFalse(self._client._uart._is_server)
         self.assertIsInstance(self._register_definitions, dict)
 
         for reg_type in ['COILS', 'HREGS', 'ISTS', 'IREGS']:
@@ -58,7 +58,7 @@ class TestRtuExample(unittest.TestCase):
         self._read_coils_single()
 
     def _read_coils_single(self) -> None:
-        """Test reading sinlge coil of client"""
+        """Test reading single coil of server"""
         # read coil with state ON/True
         coil_address = \
             self._register_definitions['COILS']['EXAMPLE_COIL']['register']
@@ -67,8 +67,8 @@ class TestRtuExample(unittest.TestCase):
             bool(self._register_definitions['COILS']['EXAMPLE_COIL']['val'])
         ]
 
-        coil_status = self._host.read_coils(
-            slave_addr=self._client_addr,
+        coil_status = self._client.read_coils(
+            slave_addr=self._server_addr,
             starting_addr=coil_address,
             coil_qty=coil_qty)
 
@@ -90,8 +90,8 @@ class TestRtuExample(unittest.TestCase):
             self._register_definitions['COILS']['EXAMPLE_COIL_OFF']['val']
         )]
 
-        coil_status = self._host.read_coils(
-            slave_addr=self._client_addr,
+        coil_status = self._client.read_coils(
+            slave_addr=self._server_addr,
             starting_addr=coil_address,
             coil_qty=coil_qty)
 
@@ -141,12 +141,12 @@ class TestRtuExample(unittest.TestCase):
 
     @unittest.skip('Test not yet implemented')
     def test_send_response(self) -> None:
-        """Test sending a response to a client"""
+        """Test sending a response to a server"""
         pass
 
     @unittest.skip('Test not yet implemented')
     def test_send_exception_response(self) -> None:
-        """Test sending a exception response to a client"""
+        """Test sending a exception response to a server"""
         pass
 
     @unittest.skip('Test not yet implemented')
@@ -156,7 +156,7 @@ class TestRtuExample(unittest.TestCase):
 
     def tearDown(self) -> None:
         """Run after every test method"""
-        self._host._uart._sock.close()
+        self._client._uart._sock.close()
         self.test_logger.debug('Closed ModbusRTUMaster socket at tearDown')
 
 

@@ -1,0 +1,13 @@
+# Build image
+# $ docker build -t micropython-server-rtu -f Dockerfile.server_rtu .
+#
+# Run image
+# $ docker run -it --rm --name micropython-server-rtu micropython-server-rtu
+
+FROM micropython/unix:v1.18
+
+# use "volumes" in docker-compose file to remove need of rebuilding
+# COPY ./ /home
+# COPY umodbus /root/.micropython/lib/umodbus
+
+CMD [ "micropython-dev", "-m", "examples/rtu_server_example.py" ]

@@ -164,7 +164,7 @@ class CommonAsyncRTUFunctions:
 
 
 class AsyncRTUServer(RTUServer, CommonAsyncRTUFunctions):
-    """Asynchronous Modbus Serial host"""
+    """Asynchronous Modbus Serial server"""
 
     def __init__(self,
                  uart_id: int = 1,

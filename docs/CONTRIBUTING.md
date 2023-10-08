@@ -67,7 +67,7 @@ takes and runs all tests defined and imported there by the `__init__.py` file.
 
 Further tests, which could be called Integration tests, are defined in this
 folder as well. To be usable they may require a counterpart e.g. a client
-communicating with a host, which is simply achieved by two Docker containers,
+communicating with a server, which is simply achieved by two Docker containers,
 defined in the `docker-compose-tcp-test.yaml` or `docker-compose-rtu-test.yaml`
 file, located in the repo root. The examples for TCP or RTU client usage are
 used to provide a static setup.
@@ -80,17 +80,17 @@ with `0` on success.
 # build and run the "native" unittests
 docker build --tag micropython-test --file Dockerfile.tests .
 
-# Execute client/host TCP examples
-docker compose up --build --exit-code-from micropython-host
+# Execute client/server TCP examples
+docker compose up --build --exit-code-from micropython-client
 
-# Run client/host TCP tests
-docker compose -f docker-compose-tcp-test.yaml up --build --exit-code-from micropython-host
+# Run client/server TCP tests
+docker compose -f docker-compose-tcp-test.yaml up --build --exit-code-from micropython-client
 
-# Run client/host RTU examples with faked RTU via TCP
-docker compose -f docker-compose-rtu.yaml up --build --exit-code-from micropython-host
+# Run client/server RTU examples with faked RTU via TCP
+docker compose -f docker-compose-rtu.yaml up --build --exit-code-from micropython-client
 
-# Run client/host RTU tests
-docker compose -f docker-compose-rtu-test.yaml up --build --exit-code-from micropython-host
+# Run client/server RTU tests
+docker compose -f docker-compose-rtu-test.yaml up --build --exit-code-from micropython-client
 ```
 
 ### Precommit hooks

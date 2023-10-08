@@ -8,7 +8,7 @@
 [![Test Python package](https://github.com/brainelectronics/micropython-modbus/actions/workflows/test.yml/badge.svg)](https://github.com/brainelectronics/micropython-modbus/actions/workflows/test.yml)
 [![Documentation Status](https://readthedocs.org/projects/micropython-modbus/badge/?version=latest)](https://micropython-modbus.readthedocs.io/en/latest/?badge=latest)
 
-MicroPython ModBus TCP and RTU library supporting client and host mode
+MicroPython ModBus TCP and RTU library supporting client and server mode
 
 ---------------
 
@@ -105,9 +105,9 @@ device. Further usage examples can be found in the
 #### TCP
 
 ```python
-from ummodbus.tcp import ModbusTCPMaster
+from ummodbus.tcp import TCP as ModbusTCPMaster
 
-tcp_device = ModbusTCPMaster(
+tcp_client = ModbusTCPMaster(
     slave_ip='172.24.0.2',  # IP address of the target/client/slave device
     slave_port=502,         # TCP port of the target/client/slave device
     # timeout=5.0           # optional, timeout in seconds, default 5.0
@@ -118,7 +118,7 @@ slave_addr = 10
 coil_address = 123
 coil_qty = 1
 
-coil_status = host.read_coils(
+coil_status = tcp_client.read_coils(
     slave_addr=slave_addr,
     starting_addr=coil_address,
     coil_qty=coil_qty)
@@ -133,7 +133,7 @@ For further details check the latest
 ```python
 from umodbus.serial import Serial as ModbusRTUMaster
 
-host = ModbusRTUMaster(
+rtu_client = ModbusRTUMaster(
     pins=(25, 26),      # given as tuple (TX, RX), check MicroPython port specific syntax
     # baudrate=9600,    # optional, default 9600
     # data_bits=8,      # optional, default 8
@@ -148,7 +148,7 @@ slave_addr = 10
 coil_address = 123
 coil_qty = 1
 
-coil_status = host.read_coils(
+coil_status = rtu_client.read_coils(
     slave_addr=slave_addr,
     starting_addr=coil_address,
     coil_qty=coil_qty)

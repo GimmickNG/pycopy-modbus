@@ -6,9 +6,9 @@ Main script
 
 Do your stuff here, this file is similar to the loop() function on Arduino
 
-Create an async Modbus TCP and RTU client (slave) which run simultaneously,
+Create an async Modbus TCP and RTU server (slave) which run simultaneously,
 share the same register definitions, and can be requested for data or set
-with specific values by a host device.
+with specific values by a client device.
 
 After 5 minutes (which in a real application would be any event that causes
 a restart to be needed) the servers are restarted with different parameters
@@ -17,8 +17,9 @@ than originally specified.
 The TCP port and IP address, and the RTU communication pins can both be
 chosen freely (check MicroPython device/port specific limitations).
 
-The register definitions of the client as well as its connection settings like
-bus address and UART communication speed can be defined by the user.
+The shared register definitions of the servers as well as its connection
+settings like bus address and UART communication speed can be defined by
+the user.
 """
 
 # system imports
@@ -27,15 +28,15 @@ try:
 except ImportError:
     import asyncio
 
-# import modbus client classes
+# import modbus server classes
 from umodbus.asynchronous.tcp import AsyncModbusTCP as ModbusTCP
 from umodbus.asynchronous.serial import AsyncModbusRTU as ModbusRTU
 from examples.common.register_definitions import setup_callbacks
-from examples.common.tcp_client_common import register_definitions
-from examples.common.tcp_client_common import local_ip, tcp_port
-from examples.common.rtu_client_common import IS_DOCKER_MICROPYTHON
-from examples.common.rtu_client_common import slave_addr, rtu_pins
-from examples.common.rtu_client_common import baudrate, uart_id, exit
+from examples.common.tcp_server_common import register_definitions
+from examples.common.tcp_server_common import local_ip, tcp_port
+from examples.common.rtu_server_common import IS_DOCKER_MICROPYTHON
+from examples.common.rtu_server_common import slave_addr, rtu_pins
+from examples.common.rtu_server_common import baudrate, uart_id, exit
 from umodbus.typing import Tuple, Dict, Any
 
 
@@ -44,9 +45,9 @@ async def start_rtu_server(slave_addr,
                            baudrate,
                            uart_id,
                            **kwargs) -> Tuple[ModbusRTU, asyncio.Task]:
-    """Creates an RTU client and runs tests"""
+    """Creates an RTU server and runs tests"""
 
-    client = ModbusRTU(addr=slave_addr,
+    server = ModbusRTU(addr=slave_addr,
                        pins=rtu_pins,
                        baudrate=baudrate,
                        uart_id=uart_id,
@@ -54,36 +55,36 @@ async def start_rtu_server(slave_addr,
 
     if IS_DOCKER_MICROPYTHON:
         # works only with fake machine UART
-        assert client._itf._uart._is_server is True
+        assert server._itf._uart._is_server is True
 
     # start listening in background
-    await client.bind()
+    await server.bind()
 
     print('Setting up RTU registers ...')
     # use the defined values of each register type provided by register_definitions
-    client.setup_registers(registers=register_definitions)
+    server.setup_registers(registers=register_definitions)
     # alternatively use dummy default values (True for bool regs, 999 otherwise)
     # client.setup_registers(registers=register_definitions, use_default_vals=True)
     print('RTU Register setup done')
 
     # create a task, since we want the server to run in the background but also
     # want it to be able to stop anytime we want (by manipulating the server)
-    task = asyncio.create_task(client.serve_forever())
+    task = asyncio.create_task(server.serve_forever())
 
     # we can stop the task by asking the server to stop
     # but verify it's done by querying task
-    return client, task
+    return server, task
 
 
 async def start_tcp_server(host, port, backlog) -> Tuple[ModbusTCP, asyncio.Task]:
-    client = ModbusTCP()  # TODO: rename to `server`
-    await client.bind(local_ip=host, local_port=port, max_connections=backlog)
+    server = ModbusTCP()
+    await server.bind(local_ip=host, local_port=port, max_connections=backlog)
 
     print('Setting up TCP registers ...')
     # only one server for now can have callbacks setup for it
-    setup_callbacks(client, register_definitions)
+    setup_callbacks(server, register_definitions)
     # use the defined values of each register type provided by register_definitions
-    client.setup_registers(registers=register_definitions)
+    server.setup_registers(registers=register_definitions)
     # alternatively use dummy default values (True for bool regs, 999 otherwise)
     # client.setup_registers(registers=register_definitions, use_default_vals=True)
     print('TCP Register setup done')
@@ -92,11 +93,11 @@ async def start_tcp_server(host, port, backlog) -> Tuple[ModbusTCP, asyncio.Task
 
     # create a task, since we want the server to run in the background but also
     # want it to be able to stop anytime we want (by manipulating the server)
-    task = asyncio.create_task(client.serve_forever())
+    task = asyncio.create_task(server.serve_forever())
 
     # we can stop the task by asking the server to stop
     # but verify it's done by querying task
-    return client, task
+    return server, task
 
 
 async def create_servers(parameters: Dict[str, Any]) -> Tuple[Tuple[ModbusTCP, ModbusRTU],

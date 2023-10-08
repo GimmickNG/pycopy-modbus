@@ -52,12 +52,12 @@ on a coil register request.
 # example usage only, non productive code example
 
 # reading one coil returned a list of 8 boolean elements
->>> host.read_coils(slave_addr=10, starting_addr=123, coil_qty=1)
+>>> client.read_coils(slave_addr=10, starting_addr=123, coil_qty=1)
 [True, False, False, False, False, False, False, False]
 # expectation is [True]
 
 # reading 3 coils returned a list of 8 boolean elements
->>> host.read_coils(slave_addr=10, starting_addr=126, coil_qty=3)
+>>> client.read_coils(slave_addr=10, starting_addr=126, coil_qty=3)
 [False, False, False, False, False, False, False, False]
 # expectation is [False, True, False]
 ```
@@ -68,11 +68,11 @@ With the fixes of major version 2 a list with the expected length is returned
 # example usage only, non productive code example
 
 # reading one coil returns a list of 1 boolean element
->>> host.read_coils(slave_addr=10, starting_addr=123, coil_qty=1)
+>>> client.read_coils(slave_addr=10, starting_addr=123, coil_qty=1)
 [True]
 
 # reading 3 coils returns a list of 3 boolean elements
->>> host.read_coils(slave_addr=10, starting_addr=126, coil_qty=3)
+>>> client.read_coils(slave_addr=10, starting_addr=126, coil_qty=3)
 [False, True, False]
 ```
 
@@ -85,12 +85,12 @@ on a discrete input register request.
 # example usage only, non productive code example
 
 # reading one discrete input register returned a list of 8 boolean elements
->>> host.read_discrete_inputs(slave_addr=10, starting_addr=123, input_qty=1)
+>>> client.read_discrete_inputs(slave_addr=10, starting_addr=123, input_qty=1)
 [True, False, False, False, False, False, False, False]
 # expectation is [True]
 
 # reading 3 discrete input register returned a list of 8 boolean elements
->>> host.read_discrete_inputs(slave_addr=10, starting_addr=126, input_qty=3)
+>>> client.read_discrete_inputs(slave_addr=10, starting_addr=126, input_qty=3)
 [False, False, False, False, False, False, False, False]
 # expectation is [False, True, False]
 ```
@@ -101,11 +101,11 @@ With the fixes of major version 2 a list with the expected length is returned
 # example usage only, non productive code example
 
 # reading one discrete input register returns a list of 1 boolean element
->>> host.read_discrete_inputs(slave_addr=10, starting_addr=123, input_qty=1)
+>>> client.read_discrete_inputs(slave_addr=10, starting_addr=123, input_qty=1)
 [True]
 
 # reading 3 discrete input registers returns a list of 3 boolean elements
->>> host.read_discrete_inputs(slave_addr=10, starting_addr=126, input_qty=3)
+>>> client.read_discrete_inputs(slave_addr=10, starting_addr=126, input_qty=3)
 [False, True, False]
 ```
 
@@ -118,13 +118,13 @@ element on a holding register request.
 # example usage only, non productive code example
 
 # reading one register only worked as expected
->>> host.read_holding_registers(slave_addr=10, starting_addr=93, register_qty=1, signed=False)
+>>> client.read_holding_registers(slave_addr=10, starting_addr=93, register_qty=1, signed=False)
 (19,)
 # expectation is (19,)
 
 # reading multiple registers did not work as expected
 # register values of register 93 + 94 should be returned
->>> host.read_holding_registers(slave_addr=10, starting_addr=93, register_qty=2, signed=False)
+>>> client.read_holding_registers(slave_addr=10, starting_addr=93, register_qty=2, signed=False)
 (19,)
 # expectation is (19, 29)
 ```
@@ -135,11 +135,11 @@ With the fixes of major version 2 a list with the expected length is returned
 # example usage only, non productive code example
 
 # reading one register only worked as expected
->>> host.read_holding_registers(slave_addr=10, starting_addr=93, register_qty=1, signed=False)
+>>> client.read_holding_registers(slave_addr=10, starting_addr=93, register_qty=1, signed=False)
 (19,)
 
 # reading multiple registers did not work as expected
 # register values of register 93 + 94 should be returned
->>> host.read_holding_registers(slave_addr=10, starting_addr=93, register_qty=2, signed=False)
+>>> client.read_holding_registers(slave_addr=10, starting_addr=93, register_qty=2, signed=False)
 (19, 29)
 ```
