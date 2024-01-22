@@ -98,7 +98,15 @@ class CommonAsyncRTUFunctions(CommonRTUFunctions):
     async def _uart_read_frame(self,
                                timeout: Optional[int] = None) -> bytearray:
         """@see RTUServer._uart_read_frame"""
-        t1char_ms = max(1, self._t1char//1000)
+        # As asyncio.sleep_us() does not exist, we have to use asyncio.sleep_ms()
+        # Conversion in ms: t1char_ms = max(1, self._t1char//1000)
+        # hmaerki successfully tested this on rp2040 with 9600 baud.
+        # However, GimmickNG observed, on release='1.21.0', machine='Generic ESP32S3 module with ESP32S3'
+        # that "sometimes my application goes crazy: my thread goes slow, the network connection via WiFi (I'm using ESP32-S3 that has WiFi) causes big delays"
+        # He then successfully tested it with max(2, self._t1char//1000)
+        # It seem suspicious that changing 1ms vs 2ms in a wait loop makes the protocol fail.
+        # Could it be that `asyncio.sleep_ms(1)` is not scheduled correctly on the ESP32S3?
+        t1char_ms = max(2, self._t1char//1000)
 
         # Wait here till the next frame starts
         while not self._uart.any():
