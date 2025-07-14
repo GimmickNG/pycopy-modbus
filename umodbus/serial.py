@@ -9,6 +9,7 @@
 #
 
 # system packages
+import os
 from machine import UART
 from machine import Pin
 import struct
@@ -107,6 +108,12 @@ class CommonRTUFunctions(object):
         super().__init__()
         # UART flush function is introduced in Micropython v1.20.0
         self._has_uart_flush = callable(getattr(UART, "flush", None))
+        sysname, _nodename, release, _version, _machine = os.uname()
+        if sysname == "rp2" and release in ("1.22.0", "1.22.1"):
+            # See: https://github.com/micropython/micropython/issues/13377
+            self._has_uart_flush = False
+            print("https://github.com/micropython/micropython/issues/13377")
+
         self._uart = UART(uart_id,
                           baudrate=baudrate,
                           bits=data_bits,
