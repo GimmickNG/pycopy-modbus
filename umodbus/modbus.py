@@ -204,7 +204,6 @@ class Modbus(object):
                 _cb = self._register_dict[reg_type][address]['on_get_cb']
                 _cb(reg_type=reg_type, address=address, val=vals)
 
-            #print("creating response...", type(self).__name__, "->", type(request).__name__)
             vals = self._create_response(request=request, reg_type=reg_type)
             return request.send_response(vals)
         else:
@@ -896,22 +895,22 @@ class Modbus(object):
 
                 if reg_type == Const.COILS:
                     self.add_coil(address=address,
-                                    value=value,
-                                    on_set_cb=on_set_cb,
-                                    on_get_cb=on_get_cb)
+                                  value=value,
+                                  on_set_cb=on_set_cb,
+                                  on_get_cb=on_get_cb)
                 elif reg_type == Const.HREGS:
                     self.add_hreg(address=address,
-                                    value=value,
-                                    on_set_cb=on_set_cb,
-                                    on_get_cb=on_get_cb)
+                                  value=value,
+                                  on_set_cb=on_set_cb,
+                                  on_get_cb=on_get_cb)
                 elif reg_type == Const.ISTS:
                     self.add_ist(address=address,
-                                    value=value,
-                                    on_get_cb=on_get_cb)   # only getter
+                                 value=value,
+                                 on_get_cb=on_get_cb)   # only getter
                 elif reg_type == Const.IREGS:
                     self.add_ireg(address=address,
-                                    value=value,
-                                    on_get_cb=on_get_cb)  # only getter
+                                  value=value,
+                                  on_get_cb=on_get_cb)  # only getter
 
         try:
             extra_callbacks = registers["META"]
